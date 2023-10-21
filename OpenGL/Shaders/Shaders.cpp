@@ -32,7 +32,7 @@ int main()
         return -1;
     }
 
-    Shader shader("./shader.vs", "./shader.fs");
+    Shader shader("./vertexShader.glsl", "./fragmentShader.glsl");
     shader.setFloat("xOffset", 0.5f);
 
 

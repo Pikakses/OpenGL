@@ -33,12 +33,13 @@ int main()
     }
 
     Shader shader("./shader.vs", "./shader.fs");
+    shader.setFloat("xOffset", 0.5f);
 
 
     float vertices[] = {
-        -0.5f,  -0.5f, 0.0f,  1.0f, 0.0f, 0.0f,
-		 0.5f,  -0.5f, 0.0f,  0.0f, 1.0f, 0.0f,
-		 0.0f,   0.5f, 0.0f,  0.0f, 0.0f, 1.0f
+        -0.5f,   0.5f, 0.0f,  1.0f, 0.0f, 0.0f,
+		 0.5f,   0.5f, 0.0f,  0.0f, 1.0f, 0.0f,
+		 0.0f,  -0.5f, 0.0f,  0.0f, 0.0f, 1.0f
     };
 
 
@@ -66,14 +67,6 @@ int main()
         glClear(GL_COLOR_BUFFER_BIT);
 
         shader.use();
-
-
-        /*float timeValue = glfwGetTime();
-        float redValue = (sin(timeValue) / 1.3f) + 1.1f;
-        float greenValue = (sin(timeValue) / 1.2f) + 1.2f;
-        float blueValue = (sin(timeValue) / 1.1f) + 1.3f;
-        int vertexColorLocation = glGetUniformLocation(shaderProgram, "ourColor");
-        glUniform4f(vertexColorLocation, redValue, greenValue, blueValue, 1.0f);*/
 
 
         glBindVertexArray(VAO);

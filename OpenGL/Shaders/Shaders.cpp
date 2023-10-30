@@ -33,7 +33,6 @@ int main()
     }
 
     Shader shader("./vertexShader.glsl", "./fragmentShader.glsl");
-    shader.setFloat("xOffset", 0.5f);
 
 
     float vertices[] = {

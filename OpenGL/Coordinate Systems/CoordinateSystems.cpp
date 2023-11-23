@@ -8,12 +8,24 @@
 #include <stb_image.h>
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
+void mouse_callback(GLFWwindow* window, double xPos, double yPos);
 void processInput(GLFWwindow* window);
 
 const unsigned int SCR_WIDTH = 800;
 const unsigned int SCR_HEIGHT = 600;
 
-float mixValue = 0.2f;
+glm::vec3 cameraPos   = glm::vec3(0.0f, 0.0f,  3.0f);
+glm::vec3 cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
+glm::vec3 cameraUp    = glm::vec3(0.0f, 1.0f,  0.0f);
+
+float deltaTime = 0.0f;
+float lastFrame = 0.0f;
+
+float pitch = 0.0f, yaw = -90.0f;
+
+float lastX = SCR_WIDTH / 2.0, lastY = SCR_HEIGHT / 2.0;
+
+bool firstMouse = true;
 
 int main()
 {
@@ -172,12 +184,16 @@ int main()
 
     stbi_image_free(data);
 
+
     shader.use();
     shader.setInt("texture1", 0);
     shader.setInt("texture2", 1);
-    shader.setFloat("mixValue", mixValue);
 
     glEnable(GL_DEPTH_TEST);
+
+    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+    glfwSetCursorPosCallback(window, mouse_callback);
+
 
 
     while (!glfwWindowShouldClose(window))
@@ -187,18 +203,20 @@ int main()
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        shader.setFloat("mixValue", mixValue);
-
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, texture1);
         glActiveTexture(GL_TEXTURE1);
         glBindTexture(GL_TEXTURE_2D, texture2);
 
         shader.use();
+
+        float currentFrame = glfwGetTime();
+        deltaTime = currentFrame - lastFrame;
+        lastFrame = currentFrame;
         
         // view matrix
-        glm::mat4 view = glm::mat4(1.0f);
-        view = glm::translate(view, glm::vec3(0.0f, 0.0f, -3.0f));
+        glm::mat4 view;
+        view = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
         // projection matrix
         glm::mat4 projection;
         projection = glm::perspective(glm::radians(45.0f), (float) SCR_WIDTH / (float) SCR_HEIGHT, 0.1f, 100.0f);
@@ -238,18 +256,52 @@ void processInput(GLFWwindow* window)
 {
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
         glfwSetWindowShouldClose(window, true);
-    if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS)
-    {
-        mixValue += 0.005f;
-        if (mixValue >= 1.0f)
-            mixValue = 1.0f;
+
+    const float cameraSpeed = 3.0f * deltaTime;
+
+    if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
+        cameraPos += cameraSpeed * cameraFront;
+    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
+        cameraPos -= cameraSpeed * cameraFront;
+    if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
+        cameraPos -= glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
+    if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
+        cameraPos += glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
+    
+}
+
+void mouse_callback(GLFWwindow* window, double xPos, double yPos)
+{
+    if (firstMouse) {
+        lastX = xPos;
+        lastY = yPos;
+        firstMouse = false;
     }
-    if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS)
-    {
-        mixValue -= 0.005f;
-        if (mixValue <= 0.0f)
-            mixValue = 0.0f;
-    }
+
+    float xOffset = xPos - lastX;
+    float yOffset = lastY - yPos;
+    lastX = xPos; 
+    lastY = yPos;
+
+    const float sensitivity = 0.1f;
+    xOffset *= sensitivity;
+    yOffset *= sensitivity;
+
+    yaw += xOffset;
+    pitch += yOffset;
+    
+    if (pitch >= 89.0f)
+        pitch = 89.0f;
+    if (pitch <= -89.0f)
+        pitch = -89.0f;
+
+
+    glm::vec3 cameraDirection;
+    cameraDirection.x = cos(glm::radians(yaw)) * cos(glm::radians(pitch));
+    cameraDirection.y = sin(glm::radians(pitch));
+    cameraDirection.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch));
+    cameraFront = glm::normalize(cameraDirection);
+
 }
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)
